@@ -1,0 +1,111 @@
+<template>
+  <div class="container">
+    <NavBar></NavBar>
+    <!-- <p v-if="!mot">
+      Bonjour, entrez votre mot dans la barre de recherche prévu à cet effet.
+    </p> -->
+    <div id="frontCard">
+      <b-card title="Dictionnaire JeuxDeMots" sub-title="Université de Montpellier">
+        <b-card-text>
+          Ce site internet permet d'explorer le réseau lexico-sémantique de <a href="http://www.jeuxdemots.org/">JeuxDeMots</a>
+        </b-card-text>
+      </b-card>
+    </div>
+    <Search
+      :mot.sync="mot"
+      :requestAnswer.sync="requestAnswer"
+      :infoData.sync="infoData"
+      v-on:waitingRequestAnswer="waitingRequestAnswer"
+      v-on:resetAllVariable="resetAllVariable"
+      v-on:update-mot="updateMot"
+    ></Search>
+  </div>
+</template>
+
+<script>
+import NavBar from "./Navbar.vue";
+import Search from "./Search.vue";
+
+export default {
+  name: "Main",
+  components: {
+    NavBar,
+    Search,
+  },
+
+  data() {
+    return {
+      mot: "",
+      eid: "",
+      requestAnswer: "",
+      def: Array,
+      relationsTriees: Object,
+      infoData: [],
+      headerMot: Object,
+      //"information potentielle"
+      relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"]
+    };
+  },
+
+  methods: {
+    waitingRequestAnswer: function () {
+      setTimeout(() => {
+        this.sortRequestAnswer();
+      }, 1);
+    },
+
+    sortRequestAnswer: function () {
+      // LECTURE JSON
+      var objectJSON = JSON.parse(this.requestAnswer);
+      // console.log(objectJSON["data"]); // Check JSON FILE
+      this.def = objectJSON["data"]["definitions"];
+      this.relationsTriees = objectJSON["data"]["relationsTriees"];
+      this.eid = objectJSON["data"]["eid"];
+      this.headerMot = new Object();
+      for(var key in this.relationsTriees){
+        if(this.relationsHeaderMot.includes(key)){
+          this.headerMot[key] = ""
+          for(var t of this.relationsTriees[key].sortantes){
+            if(t[2] === this.eid){
+              this.headerMot[key] += t[3][2] + ", "
+            }
+          }
+          this.headerMot[key] = this.headerMot[key].substring(0, this.headerMot[key].length - 2) 
+        }
+      }
+      this.infoData.push(this.def);
+      this.infoData.push(this.relationsTriees);
+      this.infoData.push(this.headerMot);
+    },
+
+    resetAllVariable: function () {
+      this.mot = "";
+      this.requestAnswer = "";
+      this.def = Array;
+      this.relationsTriees = Object;
+      this.infoData.length = 0;
+    },
+  },
+};
+</script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+#frontCard{
+  padding-top: 16px;
+}
+h3 {
+  margin: 40px 0 0;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+li {
+  display: inline-block;
+  margin: 0 10px;
+}
+a {
+  color: #42b983;
+}
+</style>
