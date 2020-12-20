@@ -52,20 +52,18 @@ export default {
   methods: {
     waitingRequestAnswer: function () {
       setTimeout(() => {
-        console.log("Waiting");
         this.sortRequestAnswer();
         this.showCardFromSearch = true;
+        this.$emit("Ready");
       }, 1);
     },
 
     sortRequestAnswer: function () {
       // LECTURE JSON
-      console.log("sortRequestAnswer");
       var objectJSON = JSON.parse(this.requestAnswer);
       // console.log(objectJSON["data"]); // Check JSON FILE
       this.def = objectJSON["data"]["definitions"];
       this.relationsTriees = objectJSON["data"]["relationsTriees"];
-      console.log(this.relationsTriees);
       this.eid = objectJSON["data"]["eid"];
       this.headerMot = new Object();
       for(var key in this.relationsTriees){
@@ -90,6 +88,7 @@ export default {
       this.def = Array;
       this.relationsTriees = Object;
       this.infoData.length = 0;
+      this.showCardFromSearch = false;
     },
   },
 };
