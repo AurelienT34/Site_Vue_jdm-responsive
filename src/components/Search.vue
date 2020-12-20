@@ -38,18 +38,25 @@
           v-on:update-mot="updateMot">
         </Displayer>
       </div>
+      <div v-if="!showCardFromSearch">
+        <Interface
+        :displayLoader.sync="displayLoader">
+        </Interface>
+      </div>
   </div>
 </template>
 
 <script>
 // import Displayer from "./Displayer.vue";
 import Displayer from "./DiplayerV2.vue";
+import Interface from "./Interface.vue";
 
 export default {
   name: "Search",
 
   components: {
     Displayer,
+    Interface,
   },
 
   data() {
@@ -82,7 +89,8 @@ export default {
         "CCCCCC",
       ],
       selection: "",
-      matches: []
+      matches: [],
+      displayLoader: false,
     };
   },
 
@@ -119,12 +127,14 @@ export default {
 
     prepareRequest: function () {
       this.$emit("resetAllVariable");
+      this.displayLoader = true;
       //this.$emit("update:mot", this.text);
       const url = encodeURI(
         "http://localhost:3000/chercher-mot/?motField=" + this.text
       );
       this.try(url);
       this.show = true;
+      //this.displayLoader = false;
     },
 
     try: function (url) {
