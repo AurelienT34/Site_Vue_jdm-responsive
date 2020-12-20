@@ -27,11 +27,8 @@
           </b-card-text>
 
           <template v-slot:title>
-              <b-spinner type="border" small v-if="show"></b-spinner>
               Définition
             </template>
-
-          <b-overlay :show.sync="show" no-wrap></b-overlay>
         </b-tab>
 
         <div v-for="(value, name, index) in relationsTriees" v-bind:key="index">
@@ -43,7 +40,6 @@
 
 
             <template v-slot:title>
-              <b-spinner type="border" small v-if="show"></b-spinner>
               {{name}} <b-badge variant="primary">{{value['sortantes'].length}}</b-badge>
             </template>
 
