@@ -3,10 +3,16 @@
     <b-card v-if="relationsTriees.hasOwnProperty('raffinement sémantique') && relationsTriees['raffinement sémantique']['sortantes'].length > 0">
     <h4><b-badge variant="primary">Rafinnements sémantiques</b-badge></h4>
       <!-- trier les raffinements sémantiques par poids ? -->
-      <b-spinner type="border" small v-if="show"></b-spinner>
-      <span id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']['sortantes']" v-bind:key="index">        
-        <a v-on:click="prepareRequest(value[3][5])" v-if="value[3][2].includes('>')" v-bind:class="getClassPoids(value[5])">{{value[3][5]}}</a><a v-on:click="prepareRequest(value[3][2])" v-else>{{value[3][2]}}</a><b v-if="index < relationsTriees['raffinement sémantique']['sortantes'].length - 1"> • </b>
-      </span>
+      <div style="margin-left: 3px">
+        <span id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']['sortantes']" v-bind:key="index">        
+          <a v-on:click="prepareRequest(value[3][5])" v-if="value[3][2].includes('>')" v-bind:class="getClassPoids(value[5])">{{value[3][5]}}</a>
+          <a v-on:click="prepareRequest(value[3][2])" v-else>{{value[3][2]}}</a>
+          <b v-if="index < relationsTriees['raffinement sémantique']['sortantes'].length - 1"> • </b>
+          <div v-if="index%4==0">
+            <br>
+          </div>
+        </span>
+      </div>
     </b-card>
     <b-card class="mt-3">
        <div class="row">
