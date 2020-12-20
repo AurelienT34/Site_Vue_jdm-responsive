@@ -11,7 +11,6 @@
         </b-card>
       </div>
       <Search
-        :mot.sync="mot"
         :requestAnswer.sync="requestAnswer"
         :infoData.sync="infoData"
         :showCardFromSearch.sync="showCardFromSearch"
@@ -38,7 +37,6 @@ export default {
 
   data() {
     return {
-      mot: "",
       eid: "",
       requestAnswer: "",
       def: Array,
@@ -87,7 +85,6 @@ export default {
     },
 
     resetAllVariable: function () {
-      this.mot = "";
       this.requestAnswer = "";
       this.def = Array;
       this.relationsTriees = Object;
@@ -97,7 +94,6 @@ export default {
     },
 
     ResetFromButton: function () {
-      console.log("ResetFromButton");
       this.resetAllVariable();
       this.displayLoader = false;
       this.starting = false;

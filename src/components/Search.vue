@@ -94,7 +94,6 @@ export default {
   },
 
   props: {
-    mot: String,
     requestAnswer: String,
     infoData: Array,
     showCardFromSearch: Boolean,
