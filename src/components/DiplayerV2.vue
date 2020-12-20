@@ -1,7 +1,7 @@
 <template>
   <div>
     <b-card v-if="relationsTriees.hasOwnProperty('raffinement sémantique') && relationsTriees['raffinement sémantique']['sortantes'].length > 0">
-      <h4><b-badge variant="primary">Rafinnements sémantiques</b-badge></h4>
+    <h4><b-badge variant="primary">Rafinnements sémantiques</b-badge></h4>
       <!-- trier les raffinements sémantiques par poids ? -->
       <b-spinner type="border" small v-if="show"></b-spinner>
       <span id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']['sortantes']" v-bind:key="index">        

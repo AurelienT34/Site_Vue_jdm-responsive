@@ -15,9 +15,10 @@
       :mot.sync="mot"
       :requestAnswer.sync="requestAnswer"
       :infoData.sync="infoData"
+      :showCardFromSearch.sync="showCardFromSearch"
+      v-on:sortRequestAnswer="sortRequestAnswer"
       v-on:waitingRequestAnswer="waitingRequestAnswer"
       v-on:resetAllVariable="resetAllVariable"
-      v-on:update-mot="updateMot"
     ></Search>
   </div>
 </template>
@@ -43,23 +44,28 @@ export default {
       infoData: [],
       headerMot: Object,
       //"information potentielle"
-      relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"]
+      relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"],
+      showCardFromSearch: false
     };
   },
 
   methods: {
     waitingRequestAnswer: function () {
       setTimeout(() => {
+        console.log("Waiting");
         this.sortRequestAnswer();
+        this.showCardFromSearch = true;
       }, 1);
     },
 
     sortRequestAnswer: function () {
       // LECTURE JSON
+      console.log("sortRequestAnswer");
       var objectJSON = JSON.parse(this.requestAnswer);
       // console.log(objectJSON["data"]); // Check JSON FILE
       this.def = objectJSON["data"]["definitions"];
       this.relationsTriees = objectJSON["data"]["relationsTriees"];
+      console.log(this.relationsTriees);
       this.eid = objectJSON["data"]["eid"];
       this.headerMot = new Object();
       for(var key in this.relationsTriees){

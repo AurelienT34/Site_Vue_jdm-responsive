@@ -26,7 +26,7 @@
             {{ suggestion }}
           </b-list-group-item>
         </b-list-group>
-    <div v-if="showCard">
+    <div v-if="showCardFromSearch">
       <!-- <div v-for="(value, name, index) in elements" v-bind:key="index">
           <Displayer :text="infoData[name]" :show.sync="show" :elements="value"></Displayer>
         </div> -->
@@ -34,8 +34,8 @@
           :def.sync="infoData[0]" 
           :relationsTriees.sync="infoData[1]" 
           :show.sync="show" 
-          v-on:update-mot="updateMot"
-          :headerMot.sync="infoData[2]">
+          :headerMot.sync="infoData[2]"
+          v-on:update-mot="updateMot">
         </Displayer>
       </div>
   </div>
@@ -57,7 +57,6 @@ export default {
       open: false,
       current: 0,
       text: "",
-      showCard: false,
       show: true,
       elements: [
         "Definition",
@@ -91,6 +90,7 @@ export default {
     mot: String,
     requestAnswer: String,
     infoData: Array,
+    showCardFromSearch: Boolean,
   },
 
   computed: {
@@ -119,13 +119,12 @@ export default {
 
     prepareRequest: function () {
       this.$emit("resetAllVariable");
-      this.$emit("update:mot", this.text);
+      //this.$emit("update:mot", this.text);
       const url = encodeURI(
         "http://localhost:3000/chercher-mot/?motField=" + this.text
       );
-      this.showCard = true;
-      this.show = true;
       this.try(url);
+      this.show = true;
     },
 
     try: function (url) {
