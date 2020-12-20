@@ -1,25 +1,27 @@
 <template>
+<div>
+  <NavBar></NavBar>
   <div class="container">
-    <NavBar></NavBar>
-    <!-- <p v-if="!mot">
-      Bonjour, entrez votre mot dans la barre de recherche prévu à cet effet.
-    </p> -->
-    <div id="frontCard">
-      <b-card title="Dictionnaire JeuxDeMots" sub-title="Université de Montpellier">
-        <b-card-text>
-          Ce site internet permet d'explorer le réseau lexico-sémantique de <a href="http://www.jeuxdemots.org/">JeuxDeMots</a>
-        </b-card-text>
-      </b-card>
+    <button id="Reset" type="button" class="btn btn-primary" @click="ResetFromButton" v-if="starting">Retour page d'accueil</button>
+      <div id="frontCard">
+        <b-card title="Dictionnaire JeuxDeMots" sub-title="Université de Montpellier">
+          <b-card-text>
+            Ce site internet permet d'explorer le réseau lexico-sémantique de <a href="http://www.jeuxdemots.org/">JeuxDeMots</a>
+          </b-card-text>
+        </b-card>
+      </div>
+      <Search
+        :mot.sync="mot"
+        :requestAnswer.sync="requestAnswer"
+        :infoData.sync="infoData"
+        :showCardFromSearch.sync="showCardFromSearch"
+        :displayLoader.sync="displayLoader"
+        :starting.sync="starting"
+        v-on:sortRequestAnswer="sortRequestAnswer"
+        v-on:waitingRequestAnswer="waitingRequestAnswer"
+        v-on:resetAllVariable="resetAllVariable"
+      ></Search>
     </div>
-    <Search
-      :mot.sync="mot"
-      :requestAnswer.sync="requestAnswer"
-      :infoData.sync="infoData"
-      :showCardFromSearch.sync="showCardFromSearch"
-      v-on:sortRequestAnswer="sortRequestAnswer"
-      v-on:waitingRequestAnswer="waitingRequestAnswer"
-      v-on:resetAllVariable="resetAllVariable"
-    ></Search>
   </div>
 </template>
 
@@ -45,7 +47,9 @@ export default {
       headerMot: Object,
       //"information potentielle"
       relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"],
-      showCardFromSearch: false
+      showCardFromSearch: false,
+      displayLoader: false,
+      starting: false,
     };
   },
 
@@ -89,7 +93,15 @@ export default {
       this.relationsTriees = Object;
       this.infoData.length = 0;
       this.showCardFromSearch = false;
+      this.displayLoader = true;
     },
+
+    ResetFromButton: function () {
+      console.log("ResetFromButton");
+      this.resetAllVariable();
+      this.displayLoader = false;
+      this.starting = false;
+    }
   },
 };
 </script>
@@ -112,5 +124,11 @@ li {
 }
 a {
   color: #42b983;
+}
+
+#Reset {
+  position: fixed;
+  top: 15%;
+  right: 10px;
 }
 </style>

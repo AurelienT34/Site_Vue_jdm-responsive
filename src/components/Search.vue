@@ -90,7 +90,6 @@ export default {
       ],
       selection: "",
       matches: [],
-      displayLoader: false,
     };
   },
 
@@ -99,6 +98,8 @@ export default {
     requestAnswer: String,
     infoData: Array,
     showCardFromSearch: Boolean,
+    displayLoader: Boolean,
+    starting: Boolean,
   },
 
   computed: {
@@ -127,14 +128,13 @@ export default {
 
     prepareRequest: function () {
       this.$emit("resetAllVariable");
-      this.displayLoader = true;
+      this.$emit("update:starting",true);
       //this.$emit("update:mot", this.text);
       const url = encodeURI(
         "http://localhost:3000/chercher-mot/?motField=" + this.text
       );
       this.try(url);
       this.show = true;
-      //this.displayLoader = false;
     },
 
     try: function (url) {
