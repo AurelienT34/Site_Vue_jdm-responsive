@@ -1,8 +1,8 @@
 <template>
 <div>
-  <NavBar></NavBar>
+  <NavBar
+  v-on:resetFromButton="resetFromButton"></NavBar>
   <div class="container">
-    <button id="Reset" type="button" class="btn btn-primary" @click="ResetFromButton" v-if="starting">Retour page d'accueil</button>
       <div id="frontCard">
         <b-card title="Dictionnaire JeuxDeMots" sub-title="Université de Montpellier">
           <b-card-text>
@@ -15,7 +15,6 @@
         :infoData.sync="infoData"
         :showCardFromSearch.sync="showCardFromSearch"
         :displayLoader.sync="displayLoader"
-        :starting.sync="starting"
         v-on:sortRequestAnswer="sortRequestAnswer"
         v-on:waitingRequestAnswer="waitingRequestAnswer"
         v-on:resetAllVariable="resetAllVariable"
@@ -47,7 +46,6 @@ export default {
       relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"],
       showCardFromSearch: false,
       displayLoader: false,
-      starting: false,
     };
   },
 
@@ -93,10 +91,9 @@ export default {
       this.displayLoader = true;
     },
 
-    ResetFromButton: function () {
+    resetFromButton: function () {
       this.resetAllVariable();
       this.displayLoader = false;
-      this.starting = false;
     }
   },
 };
@@ -120,11 +117,5 @@ li {
 }
 a {
   color: #42b983;
-}
-
-#Reset {
-  position: fixed;
-  top: 15%;
-  right: 10px;
 }
 </style>

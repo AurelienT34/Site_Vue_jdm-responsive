@@ -90,7 +90,6 @@ export default {
     infoData: Array,
     showCardFromSearch: Boolean,
     displayLoader: Boolean,
-    starting: Boolean,
   },
 
   computed: {
@@ -120,7 +119,6 @@ export default {
     prepareRequest: function () {
       this.open = false;
       this.$emit("resetAllVariable");
-      this.$emit("update:starting",true);
       //this.$emit("update:mot", this.text);
       const url = encodeURI(
         "http://localhost:3000/chercher-mot/?motField=" + this.text
