@@ -1,0 +1,22 @@
+HISTORIQUE
+
+
+OPTIMISER LES DONNEES ENVOYEES PAR SERVEUR.JS
+enelever mots inutiles (_COM, ...)
+donner le bon nom des relations
+enlever des relations inutiles ou incompréhensibles
+
+RESPONSIVE TELEPHONE
+
+recherche avec paramètres
+recherche avec forme de chaînes
+
+arranger partie raffinnements sémantiques
+faire que touche entrée dans recherche fonctionne
+enlever autocompletion automatique de chrome
+
+calculer cache autompletion jusqu'à 3 lettres
+
+arranger header affichage relation
+
+comprendre ce qu'il se passe avec l'url
