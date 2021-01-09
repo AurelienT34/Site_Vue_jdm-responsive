@@ -11,6 +11,8 @@ Vue.use(BootstrapVueIcons)
 Vue.use(VueAxios, axios)
 
 Vue.config.productionTip = false
+Vue.config.debug = true; 
+Vue.config.devtools = true;
 
 new Vue({
     render: h => h(App),

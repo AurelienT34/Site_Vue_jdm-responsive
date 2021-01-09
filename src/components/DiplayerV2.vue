@@ -4,7 +4,7 @@
     <h4><b-badge variant="primary">Rafinnements sémantiques</b-badge></h4>
       <!-- trier les raffinements sémantiques par poids ? -->
       <div style="margin-left: 3px">
-        <span id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']['sortantes']" v-bind:key="index">        
+        <span class="mouseHighlight" id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']['sortantes']" v-bind:key="index">        
           <a v-on:click="prepareRequest(value[3][5])" v-if="value[3][2].includes('>')" v-bind:class="getClassPoids(value[5])">{{value[3][5]}}</a>
           <a v-on:click="prepareRequest(value[3][2])" v-else>{{value[3][2]}}</a>
           <b v-if="index < relationsTriees['raffinement sémantique']['sortantes'].length - 1"> • </b>
@@ -40,7 +40,23 @@
         <div v-for="(value, name, index) in relationsTriees" v-bind:key="index">
           <b-tab>
             <b-card-text id="rel_card_text">
-              <span v-for="(obj, index) in value['sortantes']" v-b-popover.hover.top="popoverMethod(obj)" v-bind:key="index" v-bind:class="getClassPoids(obj)">{{ getHTMLRelation(obj) }}<span v-if="index < value['sortantes'].length - 1"> • </span></span>
+              <div class="h2 mb-0">
+                {{name}}
+                Tri: 
+                <b-button size="sm" class="mb-2" @click="sortRel(name, value, 'alpha-down')">
+                  <b-icon icon="sort-alpha-down" aria-hidden="true"></b-icon> 
+                </b-button> 
+                <b-button size="sm" class="mb-2" @click="sortRel(name, value, 'alpha-up')">
+                  <b-icon icon="sort-alpha-down-alt" aria-hidden="true"></b-icon> 
+                </b-button>
+                <b-button size="sm" class="mb-2" @click="sortRel(name, value, 'numeric-up')">
+                  <b-icon icon="sort-numeric-down-alt" aria-hidden="true"></b-icon> 
+                </b-button>     
+                <b-button size="sm" class="mb-2" @click="sortRel(name, value, 'numeric-down')">
+                  <b-icon icon="sort-numeric-down" aria-hidden="true"></b-icon> 
+                </b-button>          
+              </div>
+              <span class="mouseHighlight" v-for="(obj, index) in value['sortantes']" v-b-popover.hover.top="popoverMethod(obj)" v-bind:key="index" v-bind:class="getClassPoids(obj)" v-on:click="prepareRequest(getHTMLRelation(obj))">{{ getHTMLRelation(obj) }}<span v-if="index < value['sortantes'].length - 1"> • </span></span>
                <!-- {{ value }} -->
             </b-card-text>
 
@@ -123,7 +139,19 @@ export default {
     },
     prepareRequest: function (text) {
         this.$emit("update-mot", text)
-      },
+    },
+    sortRel: function(name, value, type){
+      if(type == "alpha-up"){
+        value['sortantes'].sort((a, b) => b[3][2].localeCompare(a[3][2]))
+      }else if(type == "alpha-down"){
+        value['sortantes'].sort((a, b) => a[3][2].localeCompare(b[3][2]))
+      }else if(type == "numeric-up"){
+        value['sortantes'].sort((a, b) => b[5] - a[5])
+      }else if(type == "numeric-down"){
+        value['sortantes'].sort((a, b) => a[5] - b[5])
+      }
+      
+    }
   },
 };
 </script>
@@ -132,6 +160,10 @@ export default {
 #relationHeaderMot{
   text-align: left;
   margin-bottom: 0;
+}
+.mouseHighlight:hover{
+cursor:pointer;
+text-shadow: 2px 2px 8px #000000;
 }
 .t1{
   font-size: 60%;

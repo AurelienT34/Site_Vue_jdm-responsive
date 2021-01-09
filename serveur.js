@@ -42,7 +42,85 @@ app.get('/chercher-mot/', (req, res) => {
     let mot = motQuery.replace(/>/g, '_')
     let rawData = ''
 
-    if (cache_index.includes(mot + '.json')) {
+    //if(mot) $x r_isa chien
+    //Rex r_isa $x
+
+    let splittedMot = mot.split(" ");
+    if(mot.includes("$") && splittedMot.length == 3){
+        let s = -1
+        let p = -1
+        let o = -1
+        let variable = -1
+        if(splittedMot[0][0] == '$'){
+            variable = 0
+            s = splittedMot[0].split('$')[1]
+            p = splittedMot[1]
+            o = splittedMot[2]
+            motQuery = o
+        }else if(splittedMot[1][0] == '$'){
+            variable = 1
+            s = splittedMot[0]
+            p = splittedMot[1].split('$')[1]
+            o = splittedMot[2]
+            motQuery = s 
+        }else if(splittedMot[2][0] == '$'){
+            variable = 2
+            s = splittedMot[0]
+            p = splittedMot[1]
+            o = splittedMot[2].split('$')[1]
+            motQuery = s 
+        }
+
+        http.get("http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel=" + escape(motQuery) + "&rel=", (resAPI) => {
+
+            //console.log('statusCode:', res.statusCode);
+            //console.log('headers:', res.headers);
+
+            resAPI.on('data', (chunk) => {
+                str = iconv.decode(chunk, "ISO-8859-1");
+                rawData += str
+            });
+
+            resAPI.on('end', () => {
+                try {
+                    splitData = rawData.split('<CODE>')
+                    if (splitData.length == 1) {
+                        res.json({ data: "Le terme '" + mot + "' n'existe pas dans la base de données." })
+                    } else {
+                        rawDump = splitData[1].split('</CODE>')[0]
+                        dump = parseDump(rawDump)
+                        dump.relationsTriees = new Object()
+                        for (let l of dump.relationsTypes) {
+                            dump.relationsTriees[l[3]] = genererArrayRelation(l[2], dump)
+                        }
+                        addToCache(mot, dump)
+                        let obj = new Object()
+                        obj.relationsTriees = dump.relationsTriees
+
+                        //reutilisons s o et p
+                        let liste_results = []
+                        if(variable == 0){
+                            let nom_relation = "";
+                            for(let type of dump.relationsTypes){
+                                if(type[2] == p){
+                                    nom_relation = type[3];
+                                }
+                            }
+                            let sendObj = new Object();
+                            sendObj.listeMots = obj.relationsTriees[nom_relation]['entrantes']
+                            sendObj.requete = splittedMot
+                            res.send(sendObj);
+                        }
+                    }
+                } catch (e) {
+                    console.error(e.message);
+                }
+            });
+        }).on('error', (e) => {
+            console.error(e);
+        });
+
+    }else if (cache_index.includes(mot + '.json')) {
         rawData = fs.readFileSync('./cache/' + mot + '.json')
         dump = JSON.parse(rawData)
         let obj = new Object()
@@ -88,8 +166,6 @@ app.get('/chercher-mot/', (req, res) => {
                         obj.eid = dump.eid
 
                         obj.definitions = getDefinitions(dump.eid)
-
-                        console.log(obj.definitions)
 
                         console.log("api request")
 

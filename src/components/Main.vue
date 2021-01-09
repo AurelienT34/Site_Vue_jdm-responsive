@@ -13,7 +13,9 @@
       <Search
         :requestAnswer.sync="requestAnswer"
         :infoData.sync="infoData"
+        :infoListeMotsFromSearch.sync="infoListeMotsFromSearch"
         :showCardFromSearch.sync="showCardFromSearch"
+        :showListeMotsFromSearch.sync="showListeMotsFromSearch"
         :displayLoader.sync="displayLoader"
         v-on:sortRequestAnswer="sortRequestAnswer"
         v-on:waitingRequestAnswer="waitingRequestAnswer"
@@ -45,6 +47,8 @@ export default {
       //"information potentielle"
       relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"],
       showCardFromSearch: false,
+      showListeMotsFromSearch: false,
+      infoListeMotsFromSearch: new Object(),
       displayLoader: false,
     };
   },
@@ -53,7 +57,6 @@ export default {
     waitingRequestAnswer: function () {
       setTimeout(() => {
         this.sortRequestAnswer();
-        this.showCardFromSearch = true;
         this.$emit("Ready");
       }, 1);
     },
@@ -61,25 +64,32 @@ export default {
     sortRequestAnswer: function () {
       // LECTURE JSON
       var objectJSON = JSON.parse(this.requestAnswer);
+      if(Object.prototype.hasOwnProperty.call(objectJSON.data, 'requete')){    
+        this.infoListeMotsFromSearch.listeMots = objectJSON.data.listeMots;
+        this.infoListeMotsFromSearch.requete = objectJSON.data.requete;   
+        this.showListeMotsFromSearch = true;   
+      }else{
       // console.log(objectJSON["data"]); // Check JSON FILE
-      this.def = objectJSON["data"]["definitions"];
-      this.relationsTriees = objectJSON["data"]["relationsTriees"];
-      this.eid = objectJSON["data"]["eid"];
-      this.headerMot = new Object();
-      for(var key in this.relationsTriees){
-        if(this.relationsHeaderMot.includes(key)){
-          this.headerMot[key] = ""
-          for(var t of this.relationsTriees[key].sortantes){
-            if(t[2] === this.eid){
-              this.headerMot[key] += t[3][2] + ", "
+        this.def = objectJSON["data"]["definitions"];
+        this.relationsTriees = objectJSON["data"]["relationsTriees"];
+        this.eid = objectJSON["data"]["eid"];
+        this.headerMot = new Object();
+        for(var key in this.relationsTriees){
+          if(this.relationsHeaderMot.includes(key)){
+            this.headerMot[key] = ""
+            for(var t of this.relationsTriees[key].sortantes){
+              if(t[2] === this.eid){
+                this.headerMot[key] += t[3][2] + ", "
+              }
             }
+            this.headerMot[key] = this.headerMot[key].substring(0, this.headerMot[key].length - 2) 
           }
-          this.headerMot[key] = this.headerMot[key].substring(0, this.headerMot[key].length - 2) 
         }
-      }
-      this.infoData.push(this.def);
-      this.infoData.push(this.relationsTriees);
-      this.infoData.push(this.headerMot);
+        this.infoData.push(this.def);
+        this.infoData.push(this.relationsTriees);
+        this.infoData.push(this.headerMot);
+        this.showCardFromSearch = true;
+      }      
     },
 
     resetAllVariable: function () {
@@ -94,7 +104,7 @@ export default {
     resetFromButton: function () {
       this.resetAllVariable();
       this.displayLoader = false;
-    }
+    },
   },
 };
 </script>

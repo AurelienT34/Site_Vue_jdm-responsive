@@ -21,13 +21,21 @@
           </b-list-group-item>
         </b-list-group>
 
+    <div v-if="showListeMotsFromSearch">
+        <DisplayerListeMots 
+          :infoListeMotsFromSearch.sync="infoListeMotsFromSearch" 
+          >        
+        </DisplayerListeMots>
+      </div>
+
     <div v-if="showCardFromSearch">
         <Displayer 
           :def.sync="infoData[0]" 
           :relationsTriees.sync="infoData[1]" 
           :show.sync="show" 
           :headerMot.sync="infoData[2]"
-          v-on:update-mot="updateMot">
+          v-on:update-mot="updateMot"
+          >        
         </Displayer>
       </div>
       <div v-if="!showCardFromSearch">
@@ -42,6 +50,7 @@
 // import Displayer from "./Displayer.vue";
 import Displayer from "./DiplayerV2.vue";
 import Interface from "./Interface.vue";
+import DisplayerListeMots from "./DisplayerListeMots.vue";
 
 export default {
   name: "Search",
@@ -49,6 +58,7 @@ export default {
   components: {
     Displayer,
     Interface,
+    DisplayerListeMots,
   },
 
   data() {
@@ -89,6 +99,8 @@ export default {
     requestAnswer: String,
     infoData: Array,
     showCardFromSearch: Boolean,
+    infoListeMotsFromSearch: Object,
+    showListeMotsFromSearch: Boolean,
     displayLoader: Boolean,
   },
 
