@@ -1,22 +1,22 @@
 HISTORIQUE
 
+barre de tri plus jolie
 
-OPTIMISER LES DONNEES ENVOYEES PAR SERVEUR.JS
 enelever mots inutiles (_COM, ...)
 donner le bon nom des relations
 enlever des relations inutiles ou incompréhensibles
 
 RESPONSIVE TELEPHONE
+-> media query sur la liste des types de relation
 
 recherche avec paramètres
 recherche avec forme de chaînes
 
-arranger partie raffinnements sémantiques
 faire que touche entrée dans recherche fonctionne
 enlever autocompletion automatique de chrome
 
 calculer cache autompletion jusqu'à 3 lettres
 
-arranger header affichage relation
-
 comprendre ce qu'il se passe avec l'url
+
+retour en haut quand on clique sur relation type
