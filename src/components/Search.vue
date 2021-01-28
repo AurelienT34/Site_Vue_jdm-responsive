@@ -1,18 +1,17 @@
 <template>
   <div>
-    <form action="" class="search-bar" >
-      <input type="search" name="search" pattern=".*\S.*" required
+    <form v-on:submit.prevent="noop" class="search-bar" autocomplete="off">
+      <input type="search" pattern=".*\S.*" required
         v-model="text"
         @keydown.enter = 'enter'
         @keydown.down = 'down'
         @keydown.up = 'up'
         @input = 'change'>
-      <a class="search-btn" @click="prepareRequest">
-        <span>Search</span>
-      </a>
+      <button class="search-btn" @click="prepareRequest">
+      </button>
     </form>
     <b-list-group v-if="openSuggestion" class="dropdown-menu" style="position:relative; width:100%; padding: 0px; margin-bottom: 16px;">
-          <b-list-group-item href="#" v-for="(suggestion, index) in matches"
+          <b-list-group-item v-for="(suggestion, index) in matches"
             v-bind:key="index"
             v-bind:active="isActive(index)"
             @click="suggestionClick(index)"
@@ -20,6 +19,11 @@
             {{ suggestion }}
           </b-list-group-item>
         </b-list-group>
+    <template>
+      <b-breadcrumb v-if="items.length > 1">
+          <b-breadcrumb-item v-for="(value, index) in items" v-bind:key="index" @click="accessbc(value.text)">{{value.text}}</b-breadcrumb-item>
+      </b-breadcrumb>
+    </template>
 
     <div v-if="showListeMotsFromSearch">
         <DisplayerListeMots 
@@ -33,8 +37,11 @@
           :def.sync="infoData[0]" 
           :relationsTriees.sync="infoData[1]" 
           :show.sync="show" 
+          :mot.sync="mot"
           :headerMot.sync="infoData[2]"
+          :relationsTypes.sync="infoData[3]"
           v-on:update-mot="updateMot"
+          v-on:load-more="loadMore"
           >        
         </Displayer>
       </div>
@@ -92,6 +99,7 @@ export default {
       ],
       selection: "",
       matches: [],
+      items: []
     };
   },
 
@@ -128,15 +136,33 @@ export default {
       this.prepareRequest();
     },
 
+    loadMore: function(relName, index) {
+      const url = encodeURI("http://localhost:3000/load-more/?relName=" + relName + "&index=" + index + "&mot=" + this.text)
+      this.axios
+        .get(url)
+        .then((response) => {
+          this.infoData[1][relName] = this.infoData[1][relName].concat(response.data)
+        }).catch((error) => console.log(error))
+    },
+
     prepareRequest: function () {
       this.open = false;
       this.$emit("resetAllVariable");
+      this.mot = this.text
       //this.$emit("update:mot", this.text);
       const url = encodeURI(
         "http://localhost:3000/chercher-mot/?motField=" + this.text
       );
       this.try(url);
       this.show = true;
+      this.items.push({text: this.text, href: '#'})
+    },
+
+    accessbc: function(t) {
+      if(this.text !== t){
+        this.text = t
+        this.prepareRequest()
+      }   
     },
 
     try: function (url) {
@@ -161,6 +187,11 @@ export default {
         this.text = this.matches[this.current];
         this.open = false;
       }     
+    }
+    ,
+
+    noop() {
+      //rien
     },
 
     //When up pressed while suggestions are open
@@ -192,7 +223,7 @@ export default {
     },
 
     //When one of the suggestion is clicked
-    suggestionClick(index) {
+    suggestionClick(index) {  
       this.text = this.matches[index];
       this.open = false;
       this.prepareRequest()

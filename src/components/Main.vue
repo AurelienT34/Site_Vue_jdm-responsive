@@ -42,10 +42,12 @@ export default {
       requestAnswer: "",
       def: Array,
       relationsTriees: Object,
+      relationsTypes: Array,
       infoData: [],
       headerMot: Object,
       //"information potentielle"
       relationsHeaderMot: ["POS", "r_lemma", "r_data", "équivalent masc", "équivalent fem", "homophone"],
+      relationsToRemove: ["r_flpot","  	r_flpot"," 	r_flpot", "information potentielle", "r_node2relnode", "r_context", "r_link", "r_cooccurrence", "r_termgroup"],
       showCardFromSearch: false,
       showListeMotsFromSearch: false,
       infoListeMotsFromSearch: new Object(),
@@ -73,21 +75,25 @@ export default {
         this.def = objectJSON["data"]["definitions"];
         this.relationsTriees = objectJSON["data"]["relationsTriees"];
         this.eid = objectJSON["data"]["eid"];
+        this.relationsTypes = objectJSON["data"]["relationsTypes"];
         this.headerMot = new Object();
         for(var key in this.relationsTriees){
+          if(this.relationsToRemove.includes(key)){
+            delete this.relationsTriees[key]
+          }
           if(this.relationsHeaderMot.includes(key)){
             this.headerMot[key] = ""
-            for(var t of this.relationsTriees[key].sortantes){
-              if(t[2] === this.eid){
-                this.headerMot[key] += t[3][2] + ", "
-              }
+            for(var t of this.relationsTriees[key]){
+                this.headerMot[key] += t[0] + ", "
             }
             this.headerMot[key] = this.headerMot[key].substring(0, this.headerMot[key].length - 2) 
+            delete this.relationsTriees[key]
           }
         }
         this.infoData.push(this.def);
         this.infoData.push(this.relationsTriees);
         this.infoData.push(this.headerMot);
+        this.infoData.push(this.relationsTypes);
         this.showCardFromSearch = true;
       }      
     },
@@ -96,6 +102,7 @@ export default {
       this.requestAnswer = "";
       this.def = Array;
       this.relationsTriees = Object;
+      this.relationsTypes = Array;
       this.infoData.length = 0;
       this.showCardFromSearch = false;
       this.displayLoader = true;
