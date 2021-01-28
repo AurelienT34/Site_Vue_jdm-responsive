@@ -5,7 +5,9 @@ const iconv = require("iconv-lite");
 const cors = require('cors')
 const fs = require('fs');
 const { WSAECONNREFUSED } = require('constants');
+
 const port = 3000
+const MAX_REL_SIZE = 500 
 
 app.use(cors())
 
@@ -33,7 +35,20 @@ console.log(autocomplete_mots.length)
 
 
 
+
+
 //implémenter cache
+
+app.get('/load-more/', (req, res) => {
+    let relName = req.query.relName
+    let index = req.query.index
+    let mot = req.query.mot
+    rawData = fs.readFileSync('./cache/' + mot + '.json')
+    dump = JSON.parse(rawData)
+    let newinfo = dump.relationsTriees[relName].slice(parseInt(index), parseInt(index) + MAX_REL_SIZE)
+    res.send(newinfo)
+})
+
 
 app.get('/chercher-mot/', (req, res) => {
     //http://localhost:3000/chercher-mot/?motField=chien
@@ -91,14 +106,13 @@ app.get('/chercher-mot/', (req, res) => {
                         dump = parseDump(rawDump)
                         dump.relationsTriees = new Object()
                         for (let l of dump.relationsTypes) {
-                            dump.relationsTriees[l[3]] = genererArrayRelation(l[2], dump)
+                            dump.relationsTriees[l[3]] = genererArrayRelationFULL(l[2], dump)
                         }
-                        addToCache(mot, dump)
+                        //addToCache(mot, dump)
                         let obj = new Object()
-                        obj.relationsTriees = dump.relationsTriees
+                        obj.relationsTriees = dump.relationsTriees              
 
                         //reutilisons s o et p
-                        let liste_results = []
                         if(variable == 0){
                             let nom_relation = "";
                             for(let type of dump.relationsTypes){
@@ -127,6 +141,8 @@ app.get('/chercher-mot/', (req, res) => {
         obj.eid = dump.eid
         obj.definitions = getDefinitions(dump.eid)
         obj.relationsTriees = dump.relationsTriees
+        obj.relationsTriees = pruneRel(obj.relationsTriees)
+        obj.relationsTypes = dump.relationsTypes
         res.send(obj)
     } else {
         http.get("http://www.jeuxdemots.org/rezo-dump.php?gotermsubmit=Chercher&gotermrel=" + escape(motQuery) + "&rel=", (resAPI) => {
@@ -149,11 +165,16 @@ app.get('/chercher-mot/', (req, res) => {
                         dump = parseDump(rawDump)
                         dump.relationsTriees = new Object()
                         for (let l of dump.relationsTypes) {
-                            dump.relationsTriees[l[3]] = genererArrayRelation(l[2], dump)
+                            let newArray = genererArrayRelation(l[2], dump)
+                            if(newArray.length > 0){
+                                dump.relationsTriees[l[3]] = newArray
+                            }                      
                         }
                         addToCache(mot, dump)
                         let obj = new Object()
                         obj.relationsTriees = dump.relationsTriees
+                
+                        obj.relationsTriees = pruneRel(obj.relationsTriees)
 
                         // let jsonPoids = []
                         // for(let reltype in obj.relationsTriees){
@@ -166,6 +187,8 @@ app.get('/chercher-mot/', (req, res) => {
                         obj.eid = dump.eid
 
                         obj.definitions = getDefinitions(dump.eid)
+
+                        obj.relationsTypes = dump.relationsTypes
 
                         console.log("api request")
 
@@ -321,11 +344,11 @@ function parseDump(rawDump) {
     let dumpObject = new Object();
 
     dumpObject.definitions = []
-    dumpObject.nodesTypes = []
+    //dumpObject.nodesTypes = []
     dumpObject.entries = []
     dumpObject.relationsTypes = []
     dumpObject.relationsSortantes = []
-    dumpObject.relationsEntrantes = []
+    //dumpObject.relationsEntrantes = []
 
     for (let i = 0; i < tab.length; i++) {
         if (tab[i].includes('(eid=')) {
@@ -337,13 +360,14 @@ function parseDump(rawDump) {
                 i = i + 1
             }
         } else if (tab[i].includes("// les types de noeuds (Nodes Types) : nt;ntid;'ntname'")) {
-            i += 2
-            while (tab[i] != "") {
-                let t = tab[i].split(";")
-                t[2] = t[2].substring(1, t[2].length - 1)
-                dumpObject.nodesTypes.push(t)
-                i = i + 1
-            }
+            i+=1
+            // i += 2
+            // while (tab[i] != "") {
+            //     let t = tab[i].split(";")
+            //     t[2] = t[2].substring(1, t[2].length - 1)
+            //     dumpObject.nodesTypes.push(t)
+            //     i = i + 1
+            // }
         } else if (tab[i].includes("// les noeuds/termes (Entries) : e;eid;'name';type;w;'formated name'")) {
             i += 2
             while (tab[i] != "") {
@@ -371,18 +395,19 @@ function parseDump(rawDump) {
                 i = i + 1
             }
         } else if (tab[i].includes("// les relations entrantes : r;rid;node1;node2;type;w")) {
-            i += 2
-            while (tab[i] != "") {
-                dumpObject.relationsEntrantes.push(tab[i].split(";"))
-                i = i + 1
-            }
+            break
+            // i += 2
+            // while (tab[i] != "") {
+            //     dumpObject.relationsEntrantes.push(tab[i].split(";"))
+            //     i = i + 1
+            // }
         }
     }
 
     return dumpObject
 }
 
-function genererArrayRelation(r_type, dumpObject) {
+function genererArrayRelationFULL(r_type, dumpObject) {
     let arrayRelation = new Object()
     arrayRelation.entrantes = []
     arrayRelation.sortantes = []
@@ -408,6 +433,40 @@ function genererArrayRelation(r_type, dumpObject) {
     return arrayRelation
 }
 
+function genererArrayRelation(r_type, dumpObject) {
+    let arrayRelation = new Object()
+    arrayRelation = [] //uniquement les sortantes
+    let idRelation = getIdRelation(r_type, dumpObject)
+    for (let l of dumpObject.relationsSortantes) {
+        if (l[4] == idRelation) {
+            //string en 0 et poids en 1
+            let relationObject = []
+            let termeInfo = getTermeInfo(l[3], dumpObject)
+            if((idRelation == 0 && (termeInfo[2] === "_COM" || termeInfo[2] === "_SW") || (idRelation == 555 && termeInfo[2] === "_SW"))){
+                continue
+            }
+            if (termeInfo.length == 6){
+                relationObject[0] = termeInfo[5]
+            }else {
+                relationObject[0] = termeInfo[2]
+            }
+            relationObject[1] = l[5]
+            arrayRelation.push(relationObject)
+        }
+    }
+    // for (let l of dumpObject.relationsEntrantes) {
+    //     if (l[4] == idRelation) {
+    //         let termeInfo = getTermeInfo(l[2], dumpObject)
+    //         let relationInfo = l
+    //         relationInfo[2] = termeInfo
+    //         arrayRelation.entrantes.push(relationInfo)
+    //     }
+    // }
+    arrayRelation.sort((a, b) => b[1] - a[1])
+    // arrayRelation.entrantes.sort((a, b) => b[5] - a[5])
+    return arrayRelation
+}
+
 function getTermeInfo(termeId, dumpObject) {
     for (let l of dumpObject.entries) {
         if (l[1] == termeId) {
@@ -423,4 +482,13 @@ function getIdRelation(r_type, dumpObject) {
         }
     }
     return -1
+}
+
+function pruneRel(rel) {
+    for (let i in rel) {
+        if (rel[i].length > MAX_REL_SIZE){
+            rel[i] = rel[i].slice(0, MAX_REL_SIZE)
+        }
+    }
+    return rel
 }
