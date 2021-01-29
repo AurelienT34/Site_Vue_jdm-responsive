@@ -43,6 +43,7 @@ export default {
       def: Array,
       relationsTriees: Object,
       relationsTypes: Array,
+      relationsSizes: Object,
       infoData: [],
       headerMot: Object,
       //"information potentielle"
@@ -76,6 +77,7 @@ export default {
         this.relationsTriees = objectJSON["data"]["relationsTriees"];
         this.eid = objectJSON["data"]["eid"];
         this.relationsTypes = objectJSON["data"]["relationsTypes"];
+        this.relationsSizes = objectJSON["data"]["relationsSizes"];
         this.headerMot = new Object();
         for(var key in this.relationsTriees){
           if(this.relationsToRemove.includes(key)){
@@ -88,12 +90,29 @@ export default {
             }
             this.headerMot[key] = this.headerMot[key].substring(0, this.headerMot[key].length - 2) 
             delete this.relationsTriees[key]
+            if(key === "r_data"){
+              this.headerMot["Information lexicale"] = this.headerMot[key]
+              delete this.headerMot[key]
+            }else if(key === "r_lemma"){
+              this.headerMot["Lemme"] = this.headerMot[key]
+              delete this.headerMot[key]
+            }else if(key === "POS"){
+              this.headerMot["Catégorie grammaticale"] = this.headerMot[key]
+              delete this.headerMot[key]
+            }else if(key === "équivalent fem"){
+              this.headerMot["Équivalent féminin"] = this.headerMot[key]
+              delete this.headerMot[key]
+            }else if(key === "homophone"){
+              this.headerMot["Homophone"] = this.headerMot[key]
+              delete this.headerMot[key]
+            }
           }
         }
         this.infoData.push(this.def);
         this.infoData.push(this.relationsTriees);
         this.infoData.push(this.headerMot);
         this.infoData.push(this.relationsTypes);
+        this.infoData.push(this.relationsSizes)
         this.showCardFromSearch = true;
       }      
     },
@@ -106,9 +125,11 @@ export default {
       this.infoData.length = 0;
       this.showCardFromSearch = false;
       this.displayLoader = true;
+      this.relationsSizes = Object;
     },
 
     resetFromButton: function () {
+      this.$emit('reset-historique')
       this.resetAllVariable();
       this.displayLoader = false;
     },

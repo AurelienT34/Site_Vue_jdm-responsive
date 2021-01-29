@@ -1,6 +1,6 @@
 <template>
   <div>
-    <b-card v-if="relationsTriees.hasOwnProperty('raffinement sémantique') && relationsTriees['raffinement sémantique'].length > 0">
+    <b-card v-if="relationsTriees != null && relationsTriees.hasOwnProperty('raffinement sémantique') && relationsTriees['raffinement sémantique'].length > 0">
     <h4><b-badge variant="primary">Raffinements sémantiques</b-badge></h4>
         <b-card-text>
           <span class="mouseHighlight" id="raf_sem_text" v-for="(value, index) in relationsTriees['raffinement sémantique']" v-bind:key="index">        
@@ -11,7 +11,7 @@
     </b-card>
     <b-card class="mt-3x">
        <div class="row">
-         <div class="col-md-auto"><span style="font-size:4rem">{{mot}}</span></div>
+         <div class="col-md-auto"><span style="font-size:4rem; text-align:justify;">{{mot}}</span></div>
          <div class="col">
           <span v-for="(value, name, index) in headerMot" v-bind:key="index">        
             <p id="relationHeaderMot" v-if="value"><b-badge variant="info" >{{name}}:</b-badge>  {{value}} </p>   
@@ -21,7 +21,7 @@
     </b-card>
     <b-card no-body id="top">
       <div class="showSmall">
-        <b-form-select v-model="selected" :options="RelOptions" @change="changeSelected"></b-form-select>
+        <b-form-select id="selectRel" v-model="selected" :options="RelOptions" @change="changeSelected"></b-form-select>
           <b-card class="cardsSmall" id="DéfinitionsCard" title="Définitions" v-if="def != undefined">
           <b-card-text id='defCardText'> 
               <p v-for="(item, index) in def" v-bind:key="index"> {{index + 1}}. <span v-html="item">
@@ -31,8 +31,8 @@
           <b-card class="cardsSmall" :id="name + 'Card'" v-for="(value, name, index) in relationsTriees" v-bind:key="index" header-tag="header">
               <template #header>
                 <span style="float: left;" class="centerheader font-weight-bold">{{name}}</span>
-                <b-button v-bind:id="'popover' + index" style="float: left; margin-left:0.5em;" size="sm" class="mb-0" >
-                  <b-popover v-bind:target="'popover' + index" triggers="focus">
+                <b-button v-bind:id="'popoverSmall' + index" style="float: left; margin-left:0.5em;" size="sm" class="mb-0" >
+                  <b-popover v-bind:target="'popoverSmall' + index" triggers="focus">
                     <template #title>Informations sur la relation {{name}}</template>
                     {{getrelationInfo(name)}}
                   </b-popover>
@@ -58,7 +58,7 @@
                 <b-card-text>
                 <span class="mouseHighlight" v-bind:title="'Poids: ' + obj[1]" v-for="(obj, index) in value" v-bind:key="index" v-bind:class="getClassPoids(obj)" v-on:click="prepareRequest(obj[0])">{{ obj[0] }}<span v-if="index < value.length - 1"> • </span></span>
                 <div>
-                  <b-button variant="primary" v-on:click="loadmore(name, value.length)" v-if="value.length >= 500"> Load more </b-button>
+                  <b-button variant="primary" v-on:click="loadmore(name, value.length)" v-if="value.length >= 500 && relationsSizes[name] != value.length"> Load more </b-button>
                 </div>         
               </b-card-text>
             </b-card>
@@ -106,14 +106,14 @@
                 <b-card-text>
                 <span class="mouseHighlight" v-bind:title="'Poids: ' + obj[1]" v-for="(obj, index) in value" v-bind:key="index" v-bind:class="getClassPoids(obj)" v-on:click="prepareRequest(obj[0])">{{ obj[0] }}<span v-if="index < value.length - 1"> • </span></span>
                 <div>
-                  <b-button variant="primary" v-on:click="loadmore(name, value.length)" v-if="value.length >= 500"> Load more </b-button>
+                  <b-button variant="primary" v-on:click="loadmore(name, value.length)" v-if="value.length >= 500 && relationsSizes[name] != value.length"> Load more </b-button>
                 </div>         
               </b-card-text>
             </b-card>
 
 
             <template v-slot:title>
-              <div v-on:click="scrollToTop()">{{name}}<b-badge v-if="value.length >= 500" variant="primary">{{value.length}}+</b-badge><b-badge v-else variant="primary">{{value.length}}</b-badge></div>
+              <div v-on:click="scrollToTop()">{{name}}<b-badge style="float:right;" v-if="value.length >= 500 && relationsSizes[name] != value.length" variant="primary">{{value.length}}+</b-badge><b-badge v-else variant="primary" style="float:right;">{{value.length}}</b-badge></div>
             </template>
 
             <b-overlay :show.sync="show" no-wrap></b-overlay>
@@ -121,6 +121,7 @@
         </div>
       </b-tabs>
     </b-card>
+    <div id="errorText"><p>Il y a une erreur sur la requête</p><b-button v-on:click="prepareRequest()">Recharger la page</b-button></div>
   </div>
 </template>
 <script>
@@ -143,7 +144,8 @@ export default {
     mot: String,
     headerMot: Object,
     jsonPoids: Array,
-    relationsTypes: Array
+    relationsTypes: Array,
+    relationsSizes: Object
   },
 
   mounted(){
@@ -153,10 +155,17 @@ export default {
       for(let key in this.relationsTriees){
         this.RelOptions.push({value: key, text: key})     
       }
-      this.selected = this.RelOptions[0].value
-      //let visible = document.getElementById(this.selected + 'Card')
-      // visible.style.display = 'inline'
-      this.selectedTri = this.TriOptions[0].value
+      if(this.RelOptions.length > 0){
+        this.selected = this.RelOptions[0].value
+        let visible = document.getElementById(this.selected + 'Card')
+        visible.style.display = 'inline'
+        this.selectedTri = this.TriOptions[0].value
+      }else{
+        this.showError()
+        if(this.mot != null){
+          this.$emit("reset-mot", this.mot) 
+        }   
+      }
   },
 
   methods: {
@@ -204,6 +213,18 @@ export default {
       if(window.scrollY > offset){
         window.scrollTo(0,offset);
       }       
+    },
+    showError: function(){
+      let h1 = document.getElementsByClassName('showSmall')
+      for(let el of h1){
+        el.style.display = 'none'
+      }
+      let h2 = document.getElementsByClassName('showWide')
+      for(let el of h2){
+        el.style.display = 'none'
+      }
+      let show = document.getElementById('errorText')
+      show.style.display = 'inline'
     },
     getHTMLRelation: function(r){
       // let poids = parseInt(r[5])
@@ -312,11 +333,43 @@ text-shadow: 2px 2px 8px #000000;
   margin-top: 0.3em;
   }
 
-/* .showWide{
-  display: none;
-} */
-
 .cardsSmall{
   display: none;
+}
+
+#top{
+  margin-top:0.5em;
+}
+
+#selectRel{
+  display: none;
+}
+
+#errorText{
+  display: none;
+}
+
+@media (max-width: 800px){
+  .showSmall{
+    display:inline
+  }
+  .showWide{
+  display: none;
+  } 
+  #selectRel{
+  display: inline;
+} 
+}
+
+@media (min-width: 800px){
+  .showSmall{
+    display:none
+  }
+    #selectRel{
+    display: none;
+  }
+  .cardsSmall{
+  display: none;
+}
 }
 </style>

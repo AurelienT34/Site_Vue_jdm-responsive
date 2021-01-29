@@ -18,7 +18,7 @@ console.log(cache_index.length)
 
 //fs.writeFileSync("definitions.json", JSON.stringify(parseDefinitions()))
 
-var definitions = loadDefinitions()
+var definitions = parseDefinitions()
 
 console.log('definitions loaded')
 console.log(Object.keys(definitions).length)
@@ -27,7 +27,7 @@ console.log(Object.keys(definitions).length)
 var mots = parseAutocompleteMots()
 fs.writeFileSync("autocomplete_mots.json", JSON.stringify(mots))
 */
-var autocomplete_mots = JSON.parse(fs.readFileSync('autocomplete_mots.json'))
+var autocomplete_mots = parseAutocompleteMots()
 
 console.log('autocomplete_mots loaded')
 console.log(autocomplete_mots.length)
@@ -49,6 +49,14 @@ app.get('/load-more/', (req, res) => {
     res.send(newinfo)
 })
 
+app.get('/reset-mot/', (req, res) => {
+    let mot = req.query.motField
+    cache_index.splice(cache_index.indexOf(mot), 1)
+    if(fs.existsSync('./cache/' + mot + ".json")){
+        fs.unlinkSync('./cache/' + mot + ".json")
+    }   
+})
+
 
 app.get('/chercher-mot/', (req, res) => {
     //http://localhost:3000/chercher-mot/?motField=chien
@@ -61,7 +69,7 @@ app.get('/chercher-mot/', (req, res) => {
     //Rex r_isa $x
 
     let splittedMot = mot.split(" ");
-    if(mot.includes("$") && splittedMot.length == 3){
+    if(mot.includes("$") && splittedMot.length > 3){
         let s = -1
         let p = -1
         let o = -1
@@ -72,13 +80,14 @@ app.get('/chercher-mot/', (req, res) => {
             p = splittedMot[1]
             o = splittedMot[2]
             motQuery = o
-        }else if(splittedMot[1][0] == '$'){
+        }else if(splittedMot[splittedMot.length - 1][0] == '$'){
             variable = 1
             s = splittedMot[0]
             p = splittedMot[1].split('$')[1]
             o = splittedMot[2]
             motQuery = s 
-        }else if(splittedMot[2][0] == '$'){
+        }else{
+            //$ au milieu
             variable = 2
             s = splittedMot[0]
             p = splittedMot[1]
@@ -110,7 +119,7 @@ app.get('/chercher-mot/', (req, res) => {
                         }
                         //addToCache(mot, dump)
                         let obj = new Object()
-                        obj.relationsTriees = dump.relationsTriees              
+                        obj.relationsTriees = dump.relationsTriees 
 
                         //reutilisons s o et p
                         if(variable == 0){
@@ -140,7 +149,11 @@ app.get('/chercher-mot/', (req, res) => {
         let obj = new Object()
         obj.eid = dump.eid
         obj.definitions = getDefinitions(dump.eid)
-        obj.relationsTriees = dump.relationsTriees
+        obj.relationsTriees = dump.relationsTriees                          
+        obj.relationsSizes = new Object()
+        for(let rel in obj.relationsTriees){
+            obj.relationsSizes[rel] = obj.relationsTriees[rel].length
+        }
         obj.relationsTriees = pruneRel(obj.relationsTriees)
         obj.relationsTypes = dump.relationsTypes
         res.send(obj)
@@ -173,6 +186,11 @@ app.get('/chercher-mot/', (req, res) => {
                         addToCache(mot, dump)
                         let obj = new Object()
                         obj.relationsTriees = dump.relationsTriees
+
+                        obj.relationsSizes = new Object()
+                        for(let rel in obj.relationsTriees){
+                            obj.relationsSizes[rel] = obj.relationsTriees[rel].length
+                        }
                 
                         obj.relationsTriees = pruneRel(obj.relationsTriees)
 
@@ -274,7 +292,7 @@ app.get('/autocomplete-mot/', (req, res) => {
 function matching(text) {
     //preloader pour tous les mots de 3 lettres ou moins
     return autocomplete_mots.filter((str) => {
-        if (str === null) {
+        if (str == null) {
             return false
         }
         return str.indexOf(text) >= 0;
@@ -321,7 +339,7 @@ function loadDefinitions() {
 
 function parseDefinitions() {
     let def = new Object()
-    let definitionsRaw = fs.readFileSync('12022020-JEUXDEMOTS-DEFS.txt', 'latin1')
+    let definitionsRaw = fs.readFileSync('12202020-JEUXDEMOTS-DEFS.txt', 'latin1')
     let tab = definitionsRaw.split("\n");
 
     for (let i = 3; i < tab.length - 2; i++) {

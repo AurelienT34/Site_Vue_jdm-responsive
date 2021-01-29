@@ -40,8 +40,10 @@
           :mot.sync="mot"
           :headerMot.sync="infoData[2]"
           :relationsTypes.sync="infoData[3]"
+          :relationsSizes.sync="infoData[4]"
           v-on:update-mot="updateMot"
           v-on:load-more="loadMore"
+          v-on:reset-mot="resetMotCache"
           >        
         </Displayer>
       </div>
@@ -71,7 +73,7 @@ export default {
   data() {
     return {
       open: false,
-      current: 0,
+      current: null,
       text: "",
       show: true,
       elements: [
@@ -122,13 +124,26 @@ export default {
   },
 
   methods: {
+    created: function() {
+      this.$parent.$on('reset-historique', function(){
+        this.items = []
+      });
+    },
+
     autoComplete: function(){
-      const url = encodeURI("http://localhost:3000/autocomplete-mot/?motField=" + this.text)
+      const url = encodeURI("http://35.180.135.220:3000/autocomplete-mot/?motField=" + this.text)
       this.axios
         .get(url)
         .then((response) => {
           this.matches = response.data
         }).catch((error) => console.log(error))
+    },
+
+    resetMotCache: function(text){
+      const url = encodeURI("http://35.180.135.220:3000/reset-mot/?motField=" + text)
+        this.axios
+        .get(url)
+        .catch((error) => console.log(error))
     },
 
     updateMot: function (text) {
@@ -137,7 +152,7 @@ export default {
     },
 
     loadMore: function(relName, index) {
-      const url = encodeURI("http://localhost:3000/load-more/?relName=" + relName + "&index=" + index + "&mot=" + this.text)
+      const url = encodeURI("http://35.180.135.220:3000/load-more/?relName=" + relName + "&index=" + index + "&mot=" + this.text)
       this.axios
         .get(url)
         .then((response) => {
@@ -145,17 +160,21 @@ export default {
         }).catch((error) => console.log(error))
     },
 
-    prepareRequest: function () {
-      this.open = false;
-      this.$emit("resetAllVariable");
-      this.mot = this.text
-      //this.$emit("update:mot", this.text);
-      const url = encodeURI(
-        "http://localhost:3000/chercher-mot/?motField=" + this.text
-      );
-      this.try(url);
-      this.show = true;
-      this.items.push({text: this.text, href: '#'})
+    prepareRequest: function () {      
+      if(this.text !== this.mot && this.text !== ""){
+        this.open = false;
+        this.$emit("resetAllVariable");
+        this.mot = this.text
+        //this.$emit("update:mot", this.text);
+        const url = encodeURI(
+          "http://35.180.135.220:3000/chercher-mot/?motField=" + this.text
+        );
+        this.try(url);
+        this.show = true;
+        if(this.items.filter(e => e.text === this.text).length == 0){
+          this.items.push({text: this.text, href: '#'})
+        }       
+      }     
     },
 
     accessbc: function(t) {
@@ -184,24 +203,36 @@ export default {
       if(this.matches.length == 0){
         this.prepareRequest()
       }else{
-        this.text = this.matches[this.current];
-        this.open = false;
+        if(this.current != null){
+          this.text = this.matches[this.current];
+          this.open = false;
+        } else {
+          this.prepareRequest()
+        }      
       }     
     }
     ,
 
     noop() {
-      //rien
+      // inutile
     },
 
     //When up pressed while suggestions are open
     up() {
-      if (this.current > 0) this.current--;
+      if (this.current > 0) {
+        this.current--;
+        this.text = this.matches[this.current]
+      } 
     },
 
     //When up pressed while suggestions are open
     down() {
-      if (this.current < this.suggestions.length - 1) this.current++;
+      if (this.current == null){ 
+        this.current = 0; 
+      } else if (this.current < this.suggestions.length - 1) {
+        this.current++;
+        this.text = this.matches[this.current]
+      }
     },
 
     //For highlighting element
@@ -218,7 +249,7 @@ export default {
       }    
       if (this.open == false) {
         this.open = true;
-        this.current = 0;
+        this.current = null;
       }
     },
 
