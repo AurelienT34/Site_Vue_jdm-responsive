@@ -61,6 +61,8 @@ import Displayer from "./DiplayerV2.vue";
 import Interface from "./Interface.vue";
 import DisplayerListeMots from "./DisplayerListeMots.vue";
 
+const API_PATH = "/api/"
+
 export default {
   name: "Search",
 
@@ -131,7 +133,7 @@ export default {
     },
 
     autoComplete: function(){
-      const url = encodeURI("http://35.180.135.220:3000/autocomplete-mot/?motField=" + this.text)
+      const url = encodeURI(API_PATH + "autocomplete-mot/?motField=" + this.text)
       this.axios
         .get(url)
         .then((response) => {
@@ -140,7 +142,7 @@ export default {
     },
 
     resetMotCache: function(text){
-      const url = encodeURI("http://35.180.135.220:3000/reset-mot/?motField=" + text)
+      const url = encodeURI(API_PATH + "reset-mot/?motField=" + text)
         this.axios
         .get(url)
         .catch((error) => console.log(error))
@@ -152,7 +154,7 @@ export default {
     },
 
     loadMore: function(relName, index) {
-      const url = encodeURI("http://35.180.135.220:3000/load-more/?relName=" + relName + "&index=" + index + "&mot=" + this.text)
+      const url = encodeURI(API_PATH + "load-more/?relName=" + relName + "&index=" + index + "&mot=" + this.text)
       this.axios
         .get(url)
         .then((response) => {
@@ -167,7 +169,7 @@ export default {
         this.mot = this.text
         //this.$emit("update:mot", this.text);
         const url = encodeURI(
-          "http://35.180.135.220:3000/chercher-mot/?motField=" + this.text
+          API_PATH + "chercher-mot/?motField=" + this.text
         );
         this.try(url);
         this.show = true;
